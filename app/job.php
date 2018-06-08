@@ -16,6 +16,21 @@ $logger = new Katzgrau\KLogger\Logger(dirname(__DIR__).'/logs');
 $spider = new NTFDFireSpider;
 $alarms = $spider->getFireAlarms();
 
+
+//Check if process is running;
+if(file_exists(PID_PATH)){
+    $pid = file_get_contents(PID_PATH);
+    if (file_exists( "/proc/$pid" )){
+        $logger->info("[process exist check] pid: ".$pid);
+        exit;
+    }else{
+        @unlink(PID_PATH);
+    }
+}
+file_put_contents(PID_PATH,getmypid());
+//Check End
+
+
 $db = new Medoo([
     'database_type' => 'mysql',
     'database_name' => $config['db_database'],
@@ -49,22 +64,22 @@ foreach($alarms as $alarm){
             }
             $post_id = postToPage($message);
             echo "[success post] post_id: ".$post_id.PHP_EOL;
-            $logger->log("[success] ".$alarm['type']." ".$alarm['team']." post_id: ".$post_id);
+            $logger->info("[success] ".$alarm['type']." ".$alarm['team']." post_id: ".$post_id);
             sleep(2);
         }
     }catch(Facebook\Exceptions\FacebookResponseException $e) {
         echo 'Graph returned an error: ' . $e->getMessage();
         $logger->error('Graph returned an error: ' . $e->getMessage());
     }catch(Facebook\Exceptions\FacebookSDKException $e) {
-        // When validation fails or other local issues
         echo 'Facebook SDK returned an error: ' . $e->getMessage();
         $logger->error('Facebook SDK returned an error: ' . $e->getMessage());
     }catch(Exception $ex){
         echo 'Exception error: '.$ex->getMessage();
         $logger->error('Exception error: '.$ex->getMessage());
-    }
-    
+    }    
 }
+
+@unlink(PID_PATH);
 
 function postToPage($msg){
     $app_id = FB_APP_ID;
@@ -104,6 +119,6 @@ function postToPage($msg){
 
     $response = $fb->getClient()->sendRequest($request);
     $graphNode = $response->getGraphNode();
-    echo 'Post ID: ' . $graphNode['id'];
+    //echo 'Post ID: ' . $graphNode['id'];
     return $graphNode['id'];
 }
