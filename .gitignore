@@ -2,3 +2,4 @@ vendor
 composer.lock
 logs
 mypid.pid
+app/config.php
