@@ -65,18 +65,28 @@ class GetAlarm extends Command
 
         $valuestore = app('valuestore');
         $page_token = $valuestore->get('page_access_token');
+        $page_id = env('FACEBOOK_PAGE_ID','113165399264137');
 
         foreach($result as $one){
             // Save to DB
             $alarm = Alarm::firstOrNew(['time' => $one['time'] , 'location' => $one['location']]);
+
+            $old_alarm_status = $alarm->status;
 
             $alarm->type = $one['type'];
             $alarm->team = $one['team'];
             $alarm->status = $one['status'];
             $alarm->location = $one['location'];
             $alarm->save();
-        }
 
+            // Dectecting Status change
+            if(!empty($alarm->post_id) && !empty($old_alarm_status) && $old_alarm_status != $alarm->status){
+                echo "Status change: ".$old_alarm_status." -> ".$alarm->status.PHP_EOL;
+                $message = "狀態更新: ".$alarm->status;
+                $response = $client->request('POST','https://graph.facebook.com/'.$alarm->post_id.'/comments?message='.urlencode($message).'&access_token='.$page_token);
+
+            }
+        }
         $pend_alarm = Alarm::whereNull('publish_at')->orderBy('created_at','DESC')->take(10)->get();
 
         echo "Pend Publish:".count($pend_alarm).PHP_EOL;
@@ -90,9 +100,13 @@ class GetAlarm extends Command
             if(!empty($types[1])){
                 $message = $message."\n#".$types[1];
             }
-            $response = $client->request('POST','https://graph.facebook.com/113165399264137/feed?message='.urlencode($message).'&access_token='.$page_token);
-            $alarm->publish_at = date("Y-m-d H:i:s");
-            $alarm->save();
+            $response = $client->request('POST','https://graph.facebook.com/'.$page_id.'/feed?message='.urlencode($message).'&access_token='.$page_token);
+            $response = json_decode($response->getBody(),true);
+            if(!empty($response['id'])){
+                $alarm->publish_at = date("Y-m-d H:i:s");
+                $alarm->post_id = $response['id'];
+                $alarm->save();
+            }
         }
     }
 }
