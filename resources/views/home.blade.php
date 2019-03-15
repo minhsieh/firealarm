@@ -13,8 +13,9 @@
                             {{ session('status') }}
                         </div>
                     @endif
-
-                    You are logged in!
+                    @role('superadmin')
+                    <a class="btn btn-primary" href="{{ url('/home/pagetoken') }}">Refresh page token</a>
+                    @endrole
                 </div>
             </div>
         </div>
