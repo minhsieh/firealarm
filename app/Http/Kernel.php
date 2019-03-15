@@ -63,6 +63,8 @@ class Kernel extends HttpKernel
         'role' => \Modules\Cockpit\Permission\Middlewares\RoleMiddleware::class,
         'permission' => \Modules\Cockpit\Permission\Middlewares\PermissionMiddleware::class,
         'role_or_permission' => \Modules\Cockpit\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+        'cockpit.auth' => \Modules\Cockpit\Http\Middleware\CockpitAuth::class,
+        'cockpit.guest' => \Modules\Cockpit\Http\Middleware\CockpitGuest::class,
     ];
 
     /**
