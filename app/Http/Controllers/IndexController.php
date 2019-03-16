@@ -12,4 +12,9 @@ class IndexController extends Controller
         $alarms = Alarm::orderBy('created_at','DESC')->take(30)->get();
         return view('welcome',['alarms' => $alarms]);
     }
+
+    public function privacy()
+    {
+        return view('privacy');
+    }
 }

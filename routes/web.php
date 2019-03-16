@@ -12,6 +12,7 @@
 */
 
 Route::get('/', 'IndexController@index');
+Route::get('privacy','IndexController@privacy');
 
 Route::get('login/facebook', 'Auth\FacebookController@redirectToProvider');
 
